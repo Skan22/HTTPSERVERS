@@ -13,19 +13,24 @@ func main(){
 	const rootdir = "."
 
 	RequestRouter := http.NewServeMux()
-	Server := http.Server{
+	Server := &http.Server{
 		Addr: ":" + port,
 		Handler: RequestRouter,
 	}
-
-	RequestRouter.Handle("/",http.FileServer(http.Dir(rootdir)))
 	
+	RequestRouter.Handle("/app/",http.StripPrefix("/app",http.FileServer(http.Dir(rootdir))))
+
+	RequestRouter.Handle("/healthz",healthHandler())
 	fmt.Printf("Serving files from %s on port %s",rootdir,port)
 	log.Fatal(Server.ListenAndServe())
 
-
-
-
-
-
 }
+
+func healthHandler()http.HandlerFunc{
+		return func(w http.ResponseWriter, r *http.Request) {
+
+			w.Header().Set("Content-Type","text/plain; charset=utf-8")
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(http.StatusText(http.StatusOK)))
+		}
+	}
